@@ -1,0 +1,10 @@
+{
+  "name": "no-click-delay",
+  "version": "1.0.0-alpha",
+  "license": "MIT",
+  "main": "no-click-delay",
+  "files": ["no-click-delay.js"],
+  "buildConfig": {
+    "minify": true
+  }
+}
