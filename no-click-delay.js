@@ -2,19 +2,12 @@ var iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent)
 
 if (CustomEvent && iOS) {
   var clickEventsDisabledUntil = 0
-  var unmovedTouches = {}
+  var touchPositions = {}
   
   window.addEventListener('touchstart', function(event) {
     for (var i = 0; i < event.changedTouches.length; i++) {
       var touch = event.changedTouches[i]
-      unmovedTouches[touch.identifier] = true
-    }
-  })
-
-  window.addEventListener('touchmove', function(event) {
-    for (var i = 0; i < event.changedTouches.length; i++) {
-      var touch = event.changedTouches[i]
-      delete unmovedTouches[touch.identifier]
+      touchPositions[touch.identifier] = [touch.clientX, touch.clientY]
     }
   })
   
@@ -24,12 +17,18 @@ if (CustomEvent && iOS) {
     for (var i = 0; i < event.changedTouches.length; i++) {
       var touch = event.changedTouches[i]
       
-      if (!unmovedTouches[touch.identifier]) { continue }
+      var startPosition = touchPositions[touch.identifier]
+      if (!startPosition) { continue }
+
+      var deltaX = startPosition[0] - touch.clientX
+      var deltaY = startPosition[1] - touch.clientY
+      
+      if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) > 5 ) { continue }
       
       var click = new CustomEvent('click', { bubbles: true, detail: touch })
       event.target.dispatchEvent(click)
       
-      delete unmovedTouches[touch.identifier]
+      delete touchPositions[touch.identifier]
     }
   })
   
