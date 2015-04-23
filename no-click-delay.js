@@ -1,13 +1,44 @@
 var iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent)
 
 if (CustomEvent && iOS) {
+  // Tap tracking
   var clickEventsDisabledUntil = 0
-  var touchPositions = {}
-  
+  var startPositions = {}
+
+  function addPotentialTap(touch) {
+    startPositions[touch.identifier] = [touch.clientX, touch.clientY]
+  }
+
+  function updatePotentialTap(touch) {
+    var startPosition = startPositions[touch.identifier]
+    if (!startPosition) { return }
+
+    var deltaX = startPosition[0] - touch.clientX
+    var deltaY = startPosition[1] - touch.clientY
+
+    if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) > 5 ) {
+      removePotentialTap(touch) // Discard it, it's not a tap
+    }
+  }
+
+  function removePotentialTap(touch) {
+    delete startPositions[touch.identifier]
+  }
+
+  function checkIfTap(touch) {
+    return !!startPositions[touch.identifier]
+  }
+
+  // Event listeners
   window.addEventListener('touchstart', function(event) {
     for (var i = 0; i < event.changedTouches.length; i++) {
-      var touch = event.changedTouches[i]
-      touchPositions[touch.identifier] = [touch.clientX, touch.clientY]
+      addPotentialTap(event.changedTouches[i])
+    }
+  })
+
+  window.addEventListener('touchmove', function(event) {
+    for (var i = 0; i < event.changedTouches.length; i++) {
+      updatePotentialTap(event.changedTouches[i])
     }
   })
   
@@ -18,17 +49,14 @@ if (CustomEvent && iOS) {
     
     for (var i = 0; i < event.changedTouches.length; i++) {
       var touch = event.changedTouches[i]
-      
-      var startPosition = touchPositions[touch.identifier]
-      if (!startPosition) { continue }
-      delete touchPositions[touch.identifier]
+      updatePotentialTap(touch)
 
-      var deltaX = startPosition[0] - touch.clientX
-      var deltaY = startPosition[1] - touch.clientY
-      if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) < 5 ) {
+      if (checkIfTap(touch)) {
         var click = new CustomEvent('click', { bubbles: true, detail: touch })
         event.target.dispatchEvent(click)
       }
+
+      removePotentialTap(touch)
     }
   })
   
