@@ -12,23 +12,23 @@ if (CustomEvent && iOS) {
   })
   
   window.addEventListener('touchend', function(event) {
-    clickEventsDisabledUntil = Date.now() + 1000
+    // Disable click events for 10s.
+    // Real click events probably don't occur on iOS anyway.
+    clickEventsDisabledUntil = Date.now() + 10000
     
     for (var i = 0; i < event.changedTouches.length; i++) {
       var touch = event.changedTouches[i]
       
       var startPosition = touchPositions[touch.identifier]
       if (!startPosition) { continue }
+      delete touchPositions[touch.identifier]
 
       var deltaX = startPosition[0] - touch.clientX
       var deltaY = startPosition[1] - touch.clientY
-      
-      if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) > 5 ) { continue }
-      
-      var click = new CustomEvent('click', { bubbles: true, detail: touch })
-      event.target.dispatchEvent(click)
-      
-      delete touchPositions[touch.identifier]
+      if (Math.sqrt(deltaX*deltaX + deltaY*deltaY) < 5 ) {
+        var click = new CustomEvent('click', { bubbles: true, detail: touch })
+        event.target.dispatchEvent(click)
+      }
     }
   })
   
