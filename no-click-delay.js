@@ -1,6 +1,6 @@
 var iOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent)
 
-if (CustomEvent && iOS) {
+if (typeof CustomEvent !== 'undefined' && iOS) {
   // Tap tracking
   var clickEventsDisabledUntil = 0
   var startPositions = {}
